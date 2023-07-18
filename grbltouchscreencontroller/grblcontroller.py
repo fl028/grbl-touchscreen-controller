@@ -25,15 +25,16 @@ class Controller:
         raise serial.SerialException("Arduino not found")
             
 
-    def _read(self,check):
+    def _read(self,check,sleep):
         print("Read (Checkmode: " + str(check) + ")")
         output_lines = []
         while True:
             while self.arduino.in_waiting == 0:
-                time.sleep(0.02)
+                time.sleep(const.SLEEP_MINI)
             output_lines.append(self.arduino.read(self.arduino.in_waiting).decode(const.DEFAULT_ENCODING))
             if self.arduino.in_waiting == 0:
                 break
+        time.sleep(sleep)
 
         if check:
             print("Check: " + str(output_lines[0]).strip())
@@ -42,9 +43,9 @@ class Controller:
         else:
             print("Read: " + str(output_lines))
 
-    def _send_and_receive(self, command, check=True):
-        self._write(command)
-        self._read(check)
+    def _send_and_receive(self, command, check=True, sleep= const.SLEEP_DEFAULT):
+        self._write(command, sleep)
+        self._read(check, sleep)
 
     def _initialize(self):
         print("Init")
@@ -53,7 +54,7 @@ class Controller:
         self.arduino.open()
         self._check_port_state()
         self._send_and_receive(const.GRBL_WAKEUP_COMMAND,False)
-        time.sleep(const.LONG_SLEEP)
+        time.sleep(const.SLEEP_LONG)
 
     def _check_port_state(self):
         self.state = self.arduino.is_open
@@ -61,11 +62,11 @@ class Controller:
             raise serial.SerialException("Port closed")
         print("Port state: " + str(self.state))
 
-    def _write(self, input):
+    def _write(self, input, sleep):
         print("Write: " + str(input).strip())
         self.arduino.write(bytes(input, const.DEFAULT_ENCODING))
         self.arduino.flushInput()
-        time.sleep(const.DEFAULT_SLEEP)
+        time.sleep(sleep)
         
 
     def _home(self):
@@ -80,7 +81,7 @@ class Controller:
 
     def demo_tab(self):
         print("Tab")
-        self._send_and_receive(const.GRBL_TAB_COMMAND_1 + const.NEW_LINE_CHARACTER)
-        self._send_and_receive(const.GRBL_TAB_COMMAND_2 + const.NEW_LINE_CHARACTER)
+        self._send_and_receive(command = const.GRBL_TAB_COMMAND_1 + const.NEW_LINE_CHARACTER, sleep=const.SLEEP_MINI)
+        self._send_and_receive(command = const.GRBL_TAB_COMMAND_2 + const.NEW_LINE_CHARACTER)
         
         
