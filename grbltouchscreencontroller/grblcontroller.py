@@ -6,7 +6,6 @@ import grbltouchscreencontroller.constants as const
 class Controller:
 
     def __init__(self) -> None:
-        self.arduino = serial.Serial(port=self._search_arduino_port(), baudrate=const.DEFAULT_BAUD)
         self._initialize()
         self._home()
 
@@ -26,7 +25,8 @@ class Controller:
         raise serial.SerialException("Arduino not found")
             
 
-    def _read(self):
+    def _read(self,check):
+        print("Read (Checkmode: " + str(check) + ")")
         output_lines = []
         while True:
             while self.arduino.in_waiting == 0:
@@ -34,26 +34,28 @@ class Controller:
             output_lines.append(self.arduino.read(self.arduino.in_waiting).decode(const.DEFAULT_ENCODING))
             if self.arduino.in_waiting == 0:
                 break
-        time.sleep(const.DEFAULT_SLEEP)
-        print("Read: " + str(output_lines))
-        return output_lines
+
+        if check:
+            print("Check: " + str(output_lines[0]).strip())
+            if "ok" not in output_lines[0]:
+                raise serial.SerialException("Not ok")
+        else:
+            print("Read: " + str(output_lines))
 
     def _send_and_receive(self, command, check=True):
         self._write(command)
-        output = self._read()
-
-        if check:
-            if "ok" not in output[0]:
-                raise serial.SerialException("Not ok")
+        self._read(check)
 
     def _initialize(self):
         print("Init")
+        self.arduino = serial.Serial(port=self._search_arduino_port(), baudrate=const.DEFAULT_BAUD)
         self.arduino.close()
         self.arduino.open()
-        self._get_port_state()
+        self._check_port_state()
         self._send_and_receive(const.GRBL_WAKEUP_COMMAND,False)
+        time.sleep(const.LONG_SLEEP)
 
-    def _get_port_state(self):
+    def _check_port_state(self):
         self.state = self.arduino.is_open
         if not self.state:
             raise serial.SerialException("Port closed")
