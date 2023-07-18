@@ -1,11 +1,12 @@
+import os
 import serial
 import time
 import grbltouchscreencontroller.constants as const
 
 class Controller:
 
-    def __init__(self, port) -> None:
-        self.arduino = serial.Serial(port=port, baudrate=const.DEFAULT_BAUD)
+    def __init__(self) -> None:
+        self.arduino = serial.Serial(port=self._search_arduino_port(), baudrate=const.DEFAULT_BAUD)
         self._initialize()
         self._home()
 
@@ -16,7 +17,16 @@ class Controller:
             pass
         print("Connection closed")
 
-    def read(self):
+    def _search_arduino_port(self):
+        for f in os.listdir(const.DEVICE_DEV_PATH):
+            if const.DEVICE_CALLINGUNIT_NAME in f:
+                arduino_port = str(const.DEVICE_DEV_PATH + f)
+                print("Arduino port: " + arduino_port)
+                return arduino_port
+        raise serial.SerialException("Arduino not found")
+            
+
+    def _read(self):
         output_lines = []
         while True:
             while self.arduino.in_waiting == 0:
@@ -28,9 +38,9 @@ class Controller:
         print("Read: " + str(output_lines))
         return output_lines
 
-    def send_and_receive(self, command, check=True):
+    def _send_and_receive(self, command, check=True):
         self._write(command)
-        output = self.read()
+        output = self._read()
 
         if check:
             if "ok" not in output[0]:
@@ -41,7 +51,7 @@ class Controller:
         self.arduino.close()
         self.arduino.open()
         self._get_port_state()
-        self.send_and_receive(const.GRBL_WAKEUP_COMMAND,False)
+        self._send_and_receive(const.GRBL_WAKEUP_COMMAND,False)
 
     def _get_port_state(self):
         self.state = self.arduino.is_open
@@ -58,17 +68,17 @@ class Controller:
 
     def _home(self):
         print("Home")
-        self.send_and_receive(const.GRBL_HOME_COMMAND + const.NEW_LINE_CHARACTER)
-        self.send_and_receive(const.GRBL_ZERO_COMMAND + const.NEW_LINE_CHARACTER)
+        self._send_and_receive(const.GRBL_HOME_COMMAND + const.NEW_LINE_CHARACTER)
+        self._send_and_receive(const.GRBL_ZERO_COMMAND + const.NEW_LINE_CHARACTER)
 
     def demo_move(self):
         print("Move")
-        self.send_and_receive(const.GRBL_MOVE_COMMAND_2 + const.NEW_LINE_CHARACTER)
-        self.send_and_receive(const.GRBL_MOVE_COMMAND_1 + const.NEW_LINE_CHARACTER)
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_2 + const.NEW_LINE_CHARACTER)
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_1 + const.NEW_LINE_CHARACTER)
 
     def demo_tab(self):
         print("Tab")
-        self.send_and_receive(const.GRBL_TAB_COMMAND_1 + const.NEW_LINE_CHARACTER)
-        self.send_and_receive(const.GRBL_TAB_COMMAND_2 + const.NEW_LINE_CHARACTER)
+        self._send_and_receive(const.GRBL_TAB_COMMAND_1 + const.NEW_LINE_CHARACTER)
+        self._send_and_receive(const.GRBL_TAB_COMMAND_2 + const.NEW_LINE_CHARACTER)
         
         
