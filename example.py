@@ -1,4 +1,6 @@
-from grblcontroller import core
+from grbltouchscreencontroller import grblcontroller
 
-controller = core.Controller(port="/dev/cu.usbmodemFA131")
+controller = grblcontroller.Controller(port="/dev/cu.usbmodemFA131")
+controller.demo_move()
+controller.demo_tab()
 
