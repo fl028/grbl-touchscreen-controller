@@ -7,7 +7,7 @@ class Controller:
 
     def __init__(self) -> None:
         self._initialize()
-        self._home()
+        
 
     def __del__(self):
         try:
@@ -24,7 +24,6 @@ class Controller:
                 return arduino_port
         raise serial.SerialException("Arduino not found")
             
-
     def _read(self,check,sleep):
         print("Read (Checkmode: " + str(check) + ")")
         output_lines = []
@@ -68,20 +67,39 @@ class Controller:
         self.arduino.flushInput()
         time.sleep(sleep)
         
+    def refresh_settings(self):
+        for key, value in const.GRBL_CONFIG.items():
+            print(f"Setting: {key}")
+            self._send_and_receive(value + const.NEW_LINE_CHARACTER)
 
-    def _home(self):
+    def home(self):
         print("Home")
         self._send_and_receive(const.GRBL_HOME_COMMAND + const.NEW_LINE_CHARACTER)
         self._send_and_receive(const.GRBL_ZERO_COMMAND + const.NEW_LINE_CHARACTER)
 
-    def demo_move(self):
-        print("Move")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_2 + const.NEW_LINE_CHARACTER)
+    def demo_move_topright(self):
+        print("Move topright")
         self._send_and_receive(const.GRBL_MOVE_COMMAND_1 + const.NEW_LINE_CHARACTER)
+
+    def demo_move_topleft(self):
+        print("Move topleft")
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_2 + const.NEW_LINE_CHARACTER)
+
+    def demo_move_bottomleft(self):
+        print("Move bottomleft")
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_3 + const.NEW_LINE_CHARACTER)
+
+    def demo_move_bottomright(self):
+        print("Move bottomright")
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_4 + const.NEW_LINE_CHARACTER)
+
+    def demo_move_middle(self):
+        print("Move middle")
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_5 + const.NEW_LINE_CHARACTER)
+
 
     def demo_tab(self):
         print("Tab")
-        self._send_and_receive(command = const.GRBL_TAB_COMMAND_1 + const.NEW_LINE_CHARACTER, sleep=const.SLEEP_MINI)
-        self._send_and_receive(command = const.GRBL_TAB_COMMAND_2 + const.NEW_LINE_CHARACTER)
-        
+        self._send_and_receive(command = const.GRBL_TAB_COMMAND_DOWN + const.NEW_LINE_CHARACTER, sleep=const.SLEEP_MINI)
+        self._send_and_receive(command = const.GRBL_TAB_COMMAND_UP + const.NEW_LINE_CHARACTER)
         
