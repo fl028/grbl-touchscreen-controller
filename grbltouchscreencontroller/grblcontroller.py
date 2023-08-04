@@ -77,29 +77,24 @@ class Controller:
         self._send_and_receive(const.GRBL_HOME_COMMAND + const.NEW_LINE_CHARACTER)
         self._send_and_receive(const.GRBL_ZERO_COMMAND + const.NEW_LINE_CHARACTER)
 
-    def demo_move_topright(self):
-        print("Move topright")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_1 + const.NEW_LINE_CHARACTER)
-
-    def demo_move_topleft(self):
-        print("Move topleft")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_2 + const.NEW_LINE_CHARACTER)
-
-    def demo_move_bottomleft(self):
-        print("Move bottomleft")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_3 + const.NEW_LINE_CHARACTER)
-
-    def demo_move_bottomright(self):
-        print("Move bottomright")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_4 + const.NEW_LINE_CHARACTER)
-
-    def demo_move_middle(self):
-        print("Move middle")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_5 + const.NEW_LINE_CHARACTER)
-
-
-    def demo_tab(self):
+    def sleep_position(self):
+        print("Sleep Position")
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_SLEEP_POSITION + const.NEW_LINE_CHARACTER)
+        
+    def _tab(self):
         print("Tab")
         self._send_and_receive(command = const.GRBL_TAB_COMMAND_DOWN + const.NEW_LINE_CHARACTER, sleep=const.SLEEP_MINI)
         self._send_and_receive(command = const.GRBL_TAB_COMMAND_UP + const.NEW_LINE_CHARACTER)
-        
+
+    def demo(self):
+        print("Move topright")
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_1 + const.NEW_LINE_CHARACTER)
+        print("Move topleft")
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_2 + const.NEW_LINE_CHARACTER)
+        print("Move middle")
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_MIDDLE + const.NEW_LINE_CHARACTER)
+        self._tab()
+        print("Move bottomleft")
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_3 + const.NEW_LINE_CHARACTER)
+        print("Move bottomright")
+        self._send_and_receive(const.GRBL_MOVE_COMMAND_4 + const.NEW_LINE_CHARACTER)
