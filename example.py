@@ -1,12 +1,16 @@
 from grbltouchscreencontroller import grblcontroller
 
-controller = grblcontroller.Controller()
+demo_tab_screen_locations = {
+    "top_right_1": (838, 31),
+    "top_right_2": (839, 84),
+    "top_right_3": (839, 134),
+    "bottom_left_1": (63, 598),
+    "bottom_left_2": (39, 505)
+}
 
-controller.refresh_settings() # use this to initially set settings
+controller = grblcontroller.Controller(screensize_px=(874,656),refresh_settings=False)
 controller.home()
-controller._tab() # initially lift pen
 
-for i in range(2):
-    controller.demo()
-
-controller.sleep_position()
+for desc,loc in demo_tab_screen_locations.items():
+    print(desc)
+    controller.touch_display(loc)

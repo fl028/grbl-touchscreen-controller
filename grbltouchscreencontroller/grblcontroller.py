@@ -5,16 +5,30 @@ import grbltouchscreencontroller.constants as const
 
 class Controller:
 
-    def __init__(self) -> None:
+    def __init__(self,screensize_px,refresh_settings=False) -> None:
+        """
+        screensize_px = current (width,height) in px of tablet screen
+        """
+        if refresh_settings:
+            self._refresh_settings() # use this to initially update settings
+
+        self.screensize_px = screensize_px
         self._initialize()
-        
+        self._calculate_screen_scale()
 
     def __del__(self):
+        self.sleep_position()
         try:
             self.arduino.close()
         except:
             pass
         print("Connection closed")
+
+    def _calculate_screen_scale(self):
+        print("Calculate screen scale")
+        self.scale_x = round(const.GRBL_COORDINATE_MAX_Y / self.screensize_px[0],3)  
+        self.scale_y = round(const.GRBL_COORDINATE_MAX_X / self.screensize_px[1],3)
+        print(f"Calculated scaling: scale_x: {self.scale_x} scale_y: {self.scale_y}")
 
     def _search_arduino_port(self):
         for f in os.listdir(const.DEVICE_DEV_PATH):
@@ -67,7 +81,8 @@ class Controller:
         self.arduino.flushInput()
         time.sleep(sleep)
         
-    def refresh_settings(self):
+    def _refresh_settings(self):
+        print("Refresh grbl settings")
         for key, value in const.GRBL_CONFIG.items():
             print(f"Setting: {key}")
             self._send_and_receive(value + const.NEW_LINE_CHARACTER)
@@ -76,25 +91,45 @@ class Controller:
         print("Home")
         self._send_and_receive(const.GRBL_HOME_COMMAND + const.NEW_LINE_CHARACTER)
         self._send_and_receive(const.GRBL_ZERO_COMMAND + const.NEW_LINE_CHARACTER)
+        self._tab() # initially lift pen
 
     def sleep_position(self):
         print("Sleep Position")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_SLEEP_POSITION + const.NEW_LINE_CHARACTER)
+        self._move(const.GRBL_CORDS_SLEEP_POSITION)
         
     def _tab(self):
         print("Tab")
         self._send_and_receive(command = const.GRBL_TAB_COMMAND_DOWN + const.NEW_LINE_CHARACTER, sleep=const.SLEEP_MINI)
         self._send_and_receive(command = const.GRBL_TAB_COMMAND_UP + const.NEW_LINE_CHARACTER)
 
-    def demo(self):
-        print("Move topright")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_1 + const.NEW_LINE_CHARACTER)
-        print("Move topleft")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_2 + const.NEW_LINE_CHARACTER)
-        print("Move middle")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_MIDDLE + const.NEW_LINE_CHARACTER)
+    def _move(self,grbl_cords):
+        print("Move")
+        grbl_cmd = self._build_grbl_move_command(grbl_cords)
+        self._send_and_receive(grbl_cmd + const.NEW_LINE_CHARACTER)
+
+    def _build_grbl_move_command(self,grbl_cords):
+        print("Build grbl command")
+        grbl_command = "G1 X"+str(grbl_cords[0])+" Y"+str(grbl_cords[1])+" F" + str(const.GRBL_DEFAULT_MOVEMENT_SPEED)
+        return grbl_command
+
+    def touch_display(self,screen_coordinate_px):
+        grbl_cords = self._convert_screen_location_to_grbl_location(screen_coordinate_px)
+        self._move(grbl_cords)
         self._tab()
-        print("Move bottomleft")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_3 + const.NEW_LINE_CHARACTER)
-        print("Move bottomright")
-        self._send_and_receive(const.GRBL_MOVE_COMMAND_4 + const.NEW_LINE_CHARACTER)
+
+    def _convert_screen_location_to_grbl_location(self, image_point):
+        image_x, image_y = image_point
+        
+        # Invert the y-coordinate
+        Y_inverted = self.screensize_px[1] - image_y
+        
+        # Map the image point to cartesian coordinates
+        grbl_x = Y_inverted * self.scale_x  # Swap X and Y
+        grbl_y = image_x * self.scale_y  # Swap X and Y
+        
+        # Mirror the cartesian coordinates along the X-axis
+        grbl_y = const.GRBL_COORDINATE_MAX_Y - grbl_y
+        
+        return round(grbl_x,2), round(grbl_y,2)
+
+    
